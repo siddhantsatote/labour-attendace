@@ -7,6 +7,7 @@ React web app for labour attendance tracking with on-device face recognition usi
 - Browser camera scan with live face box preview
 - Client-side face descriptor matching (Euclidean distance, threshold 0.5)
 - New worker registration (Name + Phone) with face descriptor storage
+- If scan fails, save labour manually as new with captured photo
 - Auto check-in after registration
 - Admin dashboard for workers and today's attendance
 - Attendance edge cases handled:
@@ -51,6 +52,7 @@ create table if not exists workers (
   name text not null,
   phone text not null,
   face_descriptor jsonb not null,
+  photo_url text,
   created_at timestamp with time zone default now()
 );
 
@@ -66,6 +68,9 @@ create table if not exists attendance (
 create index if not exists idx_attendance_worker_date on attendance(worker_id, date);
 create index if not exists idx_attendance_date on attendance(date);
 ```
+
+## Supabase Storage
+Create a public bucket named `worker-photos` for captured labour photos.
 
 ## Notes
 - Face detection and matching run on device.

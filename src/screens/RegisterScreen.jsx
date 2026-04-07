@@ -13,8 +13,8 @@ export default function RegisterScreen({ workerDraft, onBack, onSaved }) {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!preview?.descriptor) {
-      setError("Missing face descriptor. Scan again.");
+    if (!preview?.photoSrc) {
+      setError("Missing captured photo. Scan again.");
       return;
     }
 
@@ -29,7 +29,8 @@ export default function RegisterScreen({ workerDraft, onBack, onSaved }) {
       await registerWorkerAndCheckIn({
         name: name.trim(),
         phone: phone.trim(),
-        descriptor: preview.descriptor
+        descriptor: preview.descriptor,
+        photoDataUrl: preview.photoSrc
       });
       onSaved?.();
     } catch (currentError) {
@@ -45,6 +46,11 @@ export default function RegisterScreen({ workerDraft, onBack, onSaved }) {
         <p className="kicker">New worker</p>
         <h2 className="section-title">Register the new face</h2>
         <p className="small">Saving this worker also creates a check-in record automatically.</p>
+        {!preview?.descriptor ? (
+          <div className="status" style={{ borderColor: "rgba(245, 158, 11, 0.35)" }}>
+            Face descriptor unavailable from scan. Worker will be saved as new labour with photo and fallback descriptor.
+          </div>
+        ) : null}
 
         {error ? <div className="status" style={{ borderColor: "rgba(239, 68, 68, 0.35)" }}>{error}</div> : null}
 

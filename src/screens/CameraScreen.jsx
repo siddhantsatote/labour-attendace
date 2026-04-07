@@ -89,8 +89,17 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
 
       const detected = await detectFaceAndDescriptorFromBase64(photoSrc);
       if (!detected) {
-        setCaptureResult({ photoSrc, box: null, sourceSize: { width: video.videoWidth, height: video.videoHeight }, color: "#ef4444", matched: false, message: "No face detected." });
-        setStatus("No face detected. Try again.");
+        setCaptureResult({
+          photoSrc,
+          box: null,
+          sourceSize: { width: video.videoWidth, height: video.videoHeight },
+          displaySize: { width: video.getBoundingClientRect().width, height: video.getBoundingClientRect().height },
+          color: "#ef4444",
+          matched: false,
+          message: "Scan failed to detect a face. Continue with manual new labour registration.",
+          descriptor: null
+        });
+        setStatus("Scan failed. Continue by saving as new labour.");
         return;
       }
 
@@ -138,19 +147,32 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
         setStatus("New face detected. Register this worker.");
       }
     } catch (error) {
-      setStatus(error.message || "Unable to process this scan.");
+      const fallbackPhoto = webcamRef.current?.getScreenshot();
+      if (fallbackPhoto && video) {
+        setCaptureResult({
+          photoSrc: fallbackPhoto,
+          box: null,
+          sourceSize: { width: video.videoWidth, height: video.videoHeight },
+          displaySize: { width: video.getBoundingClientRect().width, height: video.getBoundingClientRect().height },
+          color: "#ef4444",
+          matched: false,
+          message: "Scan failed. Save this labour manually with captured photo.",
+          descriptor: null
+        });
+      }
+      setStatus(error.message || "Unable to process this scan. Save as new labour.");
     } finally {
       setBusy(false);
     }
   }
 
   function handleRegister() {
-    if (!captureResult?.descriptor) {
+    if (!captureResult?.photoSrc) {
       return;
     }
 
     onRegister?.({
-      descriptor: captureResult.descriptor,
+      descriptor: captureResult.descriptor || null,
       photoSrc: captureResult.photoSrc,
       box: captureResult.box,
       sourceSize: captureResult.sourceSize,
@@ -189,7 +211,7 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
 
         {captureResult && !captureResult.matched ? (
           <div className="actions">
-            <button className="btn success" onClick={handleRegister}>Register New Worker</button>
+            <button className="btn success" onClick={handleRegister}>Save as New Labour</button>
           </div>
         ) : null}
       </div>

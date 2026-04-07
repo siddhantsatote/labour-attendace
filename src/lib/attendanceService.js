@@ -2,6 +2,32 @@ import { getSupabaseClient } from "./supabase";
 
 export const MATCH_THRESHOLD = 0.5;
 
+function createFallbackDescriptor() {
+  return Array.from({ length: 128 }, () => 0);
+}
+
+async function uploadWorkerPhoto(workerId, photoDataUrl) {
+  if (!photoDataUrl || typeof photoDataUrl !== "string") {
+    return null;
+  }
+
+  const supabase = getSupabaseClient();
+  const response = await fetch(photoDataUrl);
+  const blob = await response.blob();
+  const path = `${workerId}/${Date.now()}.jpg`;
+
+  const { error } = await supabase.storage
+    .from("worker-photos")
+    .upload(path, blob, { contentType: "image/jpeg", upsert: true });
+
+  if (error) {
+    throw new Error(`Photo upload failed: ${error.message}`);
+  }
+
+  const { data } = supabase.storage.from("worker-photos").getPublicUrl(path);
+  return data?.publicUrl || null;
+}
+
 export function getTodayDateString() {
   const now = new Date();
   const y = now.getFullYear();
@@ -32,14 +58,16 @@ export async function getAllWorkers() {
   return data || [];
 }
 
-export async function registerWorkerAndCheckIn({ name, phone, descriptor }) {
+export async function registerWorkerAndCheckIn({ name, phone, descriptor, photoDataUrl }) {
   const supabase = getSupabaseClient();
+  const safeDescriptor = Array.isArray(descriptor) && descriptor.length === 128 ? descriptor : createFallbackDescriptor();
+
   const { data: worker, error: workerError } = await supabase
     .from("workers")
     .insert({
       name,
       phone,
-      face_descriptor: descriptor,
+      face_descriptor: safeDescriptor,
       created_at: new Date().toISOString()
     })
     .select("id, name, phone")
@@ -47,6 +75,15 @@ export async function registerWorkerAndCheckIn({ name, phone, descriptor }) {
 
   if (workerError) {
     throw workerError;
+  }
+
+  if (photoDataUrl) {
+    const publicUrl = await uploadWorkerPhoto(worker.id, photoDataUrl);
+
+    if (publicUrl) {
+      // Update optional column if it exists; ignore when schema doesn't include photo_url yet.
+      await supabase.from("workers").update({ photo_url: publicUrl }).eq("id", worker.id);
+    }
   }
 
   await checkInWorker(worker.id);
