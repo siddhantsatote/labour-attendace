@@ -30,6 +30,7 @@ React Native Expo app for labour attendance tracking with on-device face recogni
 3. Deploy with the build command from vercel.json and serve the generated dist folder.
 
 This makes the app hostable on Vercel as a static web build. The mobile app still uses Expo/EAS for native builds.
+On Vercel, use the browser camera flow only; native iOS and Android builds are separate.
 
 ## Required Face Model Files
 Put these files in assets/models:
