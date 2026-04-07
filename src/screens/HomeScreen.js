@@ -1,65 +1,47 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ onCheckIn, onCheckOut, onDashboard }) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Labour Attendance Tracker</Text>
-      <Text style={styles.subtitle}>Choose mode and scan worker face</Text>
+    <section className="hero">
+      <div className="panel panel-pad">
+        <p className="kicker">Attendance system</p>
+        <h1>ReactJS labour attendance with face recognition.</h1>
+        <p className="lead">
+          Open the camera, scan a worker, and store attendance in Supabase. Unknown faces can be registered in place and checked in automatically.
+        </p>
 
-      <Pressable style={[styles.button, styles.checkIn]} onPress={() => navigation.navigate("Camera", { mode: "check_in" })}>
-        <Text style={styles.buttonText}>Check In</Text>
-      </Pressable>
+        <div className="actions">
+          <button className="btn success" onClick={onCheckIn}>Check In</button>
+          <button className="btn primary" onClick={onCheckOut}>Check Out</button>
+          <button className="btn ghost" onClick={onDashboard}>Admin Dashboard</button>
+        </div>
 
-      <Pressable style={[styles.button, styles.checkOut]} onPress={() => navigation.navigate("Camera", { mode: "check_out" })}>
-        <Text style={styles.buttonText}>Check Out</Text>
-      </Pressable>
+        <div className="card-grid">
+          <div className="stat-card">
+            <div className="stat-label">Mode</div>
+            <div className="stat-value">Web</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Face matching</div>
+            <div className="stat-value">Client-side</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Backend</div>
+            <div className="stat-value">Supabase</div>
+          </div>
+        </div>
+      </div>
 
-      <Pressable style={[styles.button, styles.admin]} onPress={() => navigation.navigate("AdminDashboard")}>
-        <Text style={styles.buttonText}>Admin Dashboard</Text>
-      </Pressable>
-    </View>
+      <div className="panel panel-pad workspace">
+        <div className="status">
+          <strong>Phone test ready</strong>
+          <p className="small">Open the deployed Vercel URL in your phone browser and allow camera access.</p>
+        </div>
+        <div className="status">
+          <strong>Models</strong>
+          <p className="small">Place face-api.js model files in public/models.</p>
+        </div>
+      </div>
+    </section>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: "center",
-    backgroundColor: "#f8fafc"
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#0f172a",
-    textAlign: "center",
-    marginBottom: 8
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#475569",
-    textAlign: "center",
-    marginBottom: 28
-  },
-  button: {
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginBottom: 14
-  },
-  checkIn: {
-    backgroundColor: "#16a34a"
-  },
-  checkOut: {
-    backgroundColor: "#0284c7"
-  },
-  admin: {
-    backgroundColor: "#334155"
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 18,
-    fontWeight: "600"
-  }
-});

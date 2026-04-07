@@ -1,10 +1,10 @@
-# Labour Attendance Face App (Expo)
+# Labour Attendance Face App (ReactJS)
 
-React Native Expo app for labour attendance tracking with on-device face recognition using face-api.js and Supabase backend.
+React web app for labour attendance tracking with on-device face recognition using face-api.js and Supabase backend.
 
 ## Features
 - Check In / Check Out modes
-- Camera scan with live face box preview
+- Browser camera scan with live face box preview
 - Client-side face descriptor matching (Euclidean distance, threshold 0.5)
 - New worker registration (Name + Phone) with face descriptor storage
 - Auto check-in after registration
@@ -14,26 +14,26 @@ React Native Expo app for labour attendance tracking with on-device face recogni
   - Not checked in but tries to check out: blocked with message
 
 ## Install
-1. Create env file from .env.example
+1. Create a `.env` file from `.env.example`
 2. Install dependencies
-3. Place face-api.js model files in assets/models
-4. Start Expo
+3. Place face-api.js model files in `public/models`
+4. Start the Vite dev server
 
 ## Commands
 - npm install
-- npx expo start
-- npm run build:web
+- npm run dev
+- npm run build
 
 ## Vercel Deployment
-1. Add the face-api.js model files to public/models.
-2. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in Vercel environment variables.
-3. Deploy with the build command from vercel.json and serve the generated dist folder.
+1. Add the face-api.js model files to `public/models`.
+2. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel environment variables.
+3. Deploy with the build command from `vercel.json` and serve the generated `dist` folder.
 
-This makes the app hostable on Vercel as a static web build. The mobile app still uses Expo/EAS for native builds.
-On Vercel, use the browser camera flow only; native iOS and Android builds are separate.
+This makes the app hostable on Vercel as a static React web app.
+On phones, open the Vercel URL in the browser and allow camera access.
 
 ## Required Face Model Files
-Put these files in assets/models:
+Put these files in `public/models`:
 - ssd_mobilenetv1_model-weights_manifest.json
 - ssd_mobilenetv1_model-shard1
 - face_landmark_68_model-weights_manifest.json
@@ -41,8 +41,6 @@ Put these files in assets/models:
 - face_recognition_model-weights_manifest.json
 - face_recognition_model-shard1
 - face_recognition_model-shard2
-
-For Vercel web builds, mirror the same files into public/models.
 
 ## Supabase SQL
 ```sql

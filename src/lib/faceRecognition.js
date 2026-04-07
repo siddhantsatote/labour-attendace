@@ -1,26 +1,21 @@
-import * as tf from "@tensorflow/tfjs";
-import { Platform } from "react-native";
-import * as faceapi from "face-api.js";
-import * as FileSystem from "expo-file-system";
-
-if (Platform.OS !== "web") {
-  require("@tensorflow/tfjs-react-native");
-}
-
 let isReady = false;
-let decodeJpegFn = null;
+let faceapiModule = null;
+
+async function getFaceApi() {
+  if (!faceapiModule) {
+    faceapiModule = await import("face-api.js");
+  }
+
+  return faceapiModule;
+}
 
 export async function initializeFaceModels() {
   if (isReady) {
     return;
   }
 
-  await tf.ready();
-  if (Platform.OS === "web") {
-    await tf.setBackend("webgl");
-  }
-
-  const modelBaseUri = Platform.OS === "web" ? "/models" : `${FileSystem.bundleDirectory}assets/models`;
+  const faceapi = await getFaceApi();
+  const modelBaseUri = "/models";
 
   await Promise.all([
     faceapi.nets.ssdMobilenetv1.loadFromUri(modelBaseUri),
@@ -31,21 +26,12 @@ export async function initializeFaceModels() {
   isReady = true;
 }
 
-function tensorFromImageBase64(base64String) {
-  if (!decodeJpegFn) {
-    decodeJpegFn = require("@tensorflow/tfjs-react-native").decodeJpeg;
-  }
-
-  const imageData = tf.util.encodeString(base64String, "base64").buffer;
-  const raw = new Uint8Array(imageData);
-  return decodeJpegFn(raw);
-}
-
 function detectInBrowserFromBase64(base64String) {
   return new Promise((resolve, reject) => {
     const image = new window.Image();
     image.onload = async () => {
       try {
+        const faceapi = await getFaceApi();
         const detection = await faceapi
           .detectSingleFace(image)
           .withFaceLandmarks()
@@ -78,36 +64,32 @@ function detectInBrowserFromBase64(base64String) {
 
 export async function detectFaceAndDescriptorFromBase64(base64String) {
   await initializeFaceModels();
+  return detectInBrowserFromBase64(base64String);
+}
 
-  if (Platform.OS === "web") {
-    return detectInBrowserFromBase64(base64String);
+export async function detectFaceAndDescriptorFromVideo(videoElement) {
+  await initializeFaceModels();
+
+  const faceapi = await getFaceApi();
+  const detection = await faceapi
+    .detectSingleFace(videoElement)
+    .withFaceLandmarks()
+    .withFaceDescriptor();
+
+  if (!detection) {
+    return null;
   }
 
-  const imageTensor = tensorFromImageBase64(base64String);
-
-  try {
-    const detection = await faceapi
-      .detectSingleFace(imageTensor)
-      .withFaceLandmarks()
-      .withFaceDescriptor();
-
-    if (!detection) {
-      return null;
+  const box = detection.detection.box;
+  return {
+    descriptor: Array.from(detection.descriptor),
+    box: {
+      x: box.x,
+      y: box.y,
+      width: box.width,
+      height: box.height
     }
-
-    const box = detection.detection.box;
-    return {
-      descriptor: Array.from(detection.descriptor),
-      box: {
-        x: box.x,
-        y: box.y,
-        width: box.width,
-        height: box.height
-      }
-    };
-  } finally {
-    imageTensor.dispose();
-  }
+  };
 }
 
 export function euclideanDistance(descriptorA, descriptorB) {

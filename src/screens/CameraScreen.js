@@ -1,325 +1,229 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Alert, Dimensions, Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import Webcam from "react-webcam";
 import FaceBoxOverlay from "../components/FaceBoxOverlay";
 import { checkInWorker, checkOutWorker, getAllWorkers, MATCH_THRESHOLD } from "../lib/attendanceService";
-import { detectFaceAndDescriptorFromBase64, findBestMatch, initializeFaceModels } from "../lib/faceRecognition";
+import { detectFaceAndDescriptorFromBase64, detectFaceAndDescriptorFromVideo, findBestMatch, initializeFaceModels } from "../lib/faceRecognition";
 
-const PREVIEW_WIDTH = Dimensions.get("window").width - 24;
-const PREVIEW_HEIGHT = 420;
-
-export default function CameraScreen({ route, navigation }) {
-  const mode = route.params?.mode || "check_in";
-  const cameraRef = useRef(null);
+export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSaved }) {
+  const webcamRef = useRef(null);
   const liveTimerRef = useRef(null);
-  const isLiveBusyRef = useRef(false);
-
-  const [permission, requestPermission] = useCameraPermissions();
+  const [loadingModels, setLoadingModels] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [isReady, setIsReady] = useState(false);
+  const [status, setStatus] = useState("Open the camera and scan a face.");
   const [liveBox, setLiveBox] = useState(null);
-  const [captured, setCaptured] = useState(null);
-  const [statusText, setStatusText] = useState("Center face in frame and capture");
+  const [liveSize, setLiveSize] = useState({ width: 0, height: 0 });
+  const [captureResult, setCaptureResult] = useState(null);
+
+  const title = mode === "check_in" ? "Check In" : "Check Out";
 
   useEffect(() => {
-    (async () => {
-      await requestPermission();
-      try {
-        await initializeFaceModels();
-        setIsReady(true);
-      } catch (error) {
-        Alert.alert("Model load failed", "Unable to load face-api.js models from assets/models.");
-      }
-    })();
-  }, [requestPermission]);
+    let active = true;
+
+    initializeFaceModels()
+      .then(() => {
+        if (active) {
+          setLoadingModels(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setStatus("Unable to load face models. Make sure public/models is available.");
+          setLoadingModels(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
-    if (!permission?.granted || !isReady || captured) {
-      return;
+    if (loadingModels || captureResult) {
+      return undefined;
     }
 
-    liveTimerRef.current = setInterval(async () => {
-      if (!cameraRef.current || isLiveBusyRef.current || busy) {
+    liveTimerRef.current = window.setInterval(async () => {
+      const webcam = webcamRef.current;
+      const video = webcam?.video;
+
+      if (!video || video.readyState !== 4) {
         return;
       }
 
       try {
-        isLiveBusyRef.current = true;
-        const photo = await cameraRef.current.takePictureAsync({
-          base64: true,
-          quality: 0.25,
-          skipProcessing: true
-        });
-
-        const detected = await detectFaceAndDescriptorFromBase64(photo.base64);
-        if (detected?.box) {
-          setLiveBox(detected.box);
+        const boxResult = await detectFaceAndDescriptorFromVideo(video);
+        if (boxResult?.box) {
+          const rect = video.getBoundingClientRect();
+          setLiveSize({ width: rect.width, height: rect.height });
+          setLiveBox(boxResult.box);
+          setStatus("Face detected. Capture when ready.");
         } else {
           setLiveBox(null);
+          setStatus("Center a face in the frame.");
         }
       } catch (error) {
         setLiveBox(null);
-      } finally {
-        isLiveBusyRef.current = false;
       }
-    }, 1500);
+    }, 1300);
 
     return () => {
       if (liveTimerRef.current) {
-        clearInterval(liveTimerRef.current);
+        window.clearInterval(liveTimerRef.current);
       }
     };
-  }, [permission?.granted, isReady, captured, busy]);
+  }, [loadingModels, captureResult]);
 
-  async function onCapture() {
-    if (!cameraRef.current || busy) {
+  async function handleCapture() {
+    const webcam = webcamRef.current;
+    const video = webcam?.video;
+    const photoSrc = webcam?.getScreenshot();
+
+    if (!photoSrc || !video) {
+      setStatus("Camera is not ready yet.");
       return;
     }
 
     try {
       setBusy(true);
-      setStatusText("Detecting face...");
+      setStatus("Detecting face and matching worker...");
 
-      const photo = await cameraRef.current.takePictureAsync({
-        base64: true,
-        quality: 0.8,
-        skipProcessing: false
-      });
-
-      const detected = await detectFaceAndDescriptorFromBase64(photo.base64);
-
+      const detected = await detectFaceAndDescriptorFromBase64(photoSrc);
       if (!detected) {
-        setCaptured({
-          uri: photo.uri,
-          width: photo.width,
-          height: photo.height,
-          box: null,
-          matched: false,
-          descriptor: null,
-          worker: null,
-          color: "#ef4444"
-        });
-        setStatusText("No face detected. Try again.");
+        setCaptureResult({ photoSrc, box: null, sourceSize: { width: video.videoWidth, height: video.videoHeight }, color: "#ef4444", matched: false, message: "No face detected." });
+        setStatus("No face detected. Try again.");
         return;
       }
 
       const workers = await getAllWorkers();
       const best = findBestMatch(detected.descriptor, workers, MATCH_THRESHOLD);
+      const sourceSize = { width: video.videoWidth, height: video.videoHeight };
+      const displaySize = { width: video.getBoundingClientRect().width, height: video.getBoundingClientRect().height };
 
       if (best) {
         const worker = best.worker;
-        const actionResult = mode === "check_in" ? await checkInWorker(worker.id) : await checkOutWorker(worker.id);
-
-        let actionMessage = "";
-        if (mode === "check_in") {
-          actionMessage =
-            actionResult.status === "already_checked_in"
+        const action = mode === "check_in" ? await checkInWorker(worker.id) : await checkOutWorker(worker.id);
+        const message =
+          mode === "check_in"
+            ? action.status === "already_checked_in"
               ? `${worker.name} is already checked in.`
-              : `${worker.name} checked in successfully.`;
-        } else {
-          actionMessage =
-            actionResult.status === "not_checked_in"
+              : `${worker.name} checked in successfully.`
+            : action.status === "not_checked_in"
               ? `${worker.name} is not checked in today.`
-              : `${worker.name} checked out. Hours: ${actionResult.record.hours_worked}`;
-        }
+              : `${worker.name} checked out. Hours worked: ${action.record.hours_worked}`;
 
-        setCaptured({
-          uri: photo.uri,
-          width: photo.width,
-          height: photo.height,
+        setCaptureResult({
+          photoSrc,
           box: detected.box,
+          sourceSize,
+          displaySize,
+          color: "#22c55e",
           matched: true,
+          message,
           descriptor: detected.descriptor,
-          worker,
-          color: "#22c55e"
+          worker
         });
-        setStatusText(actionMessage);
+        setStatus(message);
+        onAttendanceSaved?.();
       } else {
-        setCaptured({
-          uri: photo.uri,
-          width: photo.width,
-          height: photo.height,
+        setCaptureResult({
+          photoSrc,
           box: detected.box,
+          sourceSize,
+          displaySize,
+          color: "#ef4444",
           matched: false,
-          descriptor: detected.descriptor,
-          worker: null,
-          color: "#ef4444"
+          message: "New face detected. Register this worker.",
+          descriptor: detected.descriptor
         });
-        setStatusText("New face detected. Register worker to continue.");
+        setStatus("New face detected. Register this worker.");
       }
     } catch (error) {
-      Alert.alert("Scan failed", error.message || "Unable to process this scan.");
-      setStatusText("Scan failed. Try again.");
+      setStatus(error.message || "Unable to process this scan.");
     } finally {
       setBusy(false);
     }
   }
 
-  function reset() {
-    setCaptured(null);
-    setStatusText("Center face in frame and capture");
-  }
+  function handleRegister() {
+    if (!captureResult?.descriptor) {
+      return;
+    }
 
-  if (!permission) {
-    return <View style={styles.centered}><Text>Checking camera permission...</Text></View>;
-  }
-
-  if (!permission.granted) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.info}>Camera access is required.</Text>
-        <Pressable style={styles.primaryButton} onPress={requestPermission}>
-          <Text style={styles.primaryText}>Grant Permission</Text>
-        </Pressable>
-      </View>
-    );
+    onRegister?.({
+      descriptor: captureResult.descriptor,
+      photoSrc: captureResult.photoSrc,
+      box: captureResult.box,
+      sourceSize: captureResult.sourceSize,
+      displaySize: captureResult.displaySize
+    });
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.modeLabel}>Mode: {mode === "check_in" ? "Check In" : "Check Out"}</Text>
+    <section className="hero">
+      <div className="panel panel-pad workspace">
+        <p className="kicker">Face scan</p>
+        <h2 className="section-title">{title}</h2>
+        <div className="tag-row">
+          <span className="tag good">Green = matched worker</span>
+          <span className="tag bad">Red = new face</span>
+        </div>
 
-      {!captured ? (
-        <View style={styles.cameraWrap}>
-          <CameraView ref={cameraRef} style={styles.camera} facing="front" />
-          {liveBox ? (
-            <FaceBoxOverlay
-              box={liveBox}
-              imageSize={{ width: 480, height: 640 }}
-              viewSize={{ width: PREVIEW_WIDTH, height: PREVIEW_HEIGHT }}
-              color="#22c55e"
-            />
-          ) : null}
-        </View>
-      ) : (
-        <View style={styles.previewWrap}>
-          <Image source={{ uri: captured.uri }} style={styles.previewImage} resizeMode="cover" />
-          {captured.box ? (
-            <FaceBoxOverlay
-              box={captured.box}
-              imageSize={{ width: captured.width, height: captured.height }}
-              viewSize={{ width: PREVIEW_WIDTH, height: PREVIEW_HEIGHT }}
-              color={captured.color}
-            />
-          ) : null}
-        </View>
-      )}
+        <div className="actions">
+          <button className="btn ghost" onClick={onBack}>Back</button>
+          <button className="btn primary" onClick={handleCapture} disabled={busy || loadingModels}>Scan</button>
+        </div>
 
-      <Text style={styles.status}>{statusText}</Text>
+        <div className="status">{loadingModels ? "Loading face models..." : status}</div>
 
-      {!captured ? (
-        <Pressable style={[styles.primaryButton, busy && styles.disabled]} onPress={onCapture} disabled={busy || !isReady}>
-          <Text style={styles.primaryText}>{busy ? "Processing..." : "Scan"}</Text>
-        </Pressable>
-      ) : (
-        <>
-          {!captured.matched && captured.descriptor ? (
-            <Pressable
-              style={styles.registerButton}
-              onPress={() => navigation.navigate("Register", { descriptor: captured.descriptor })}
-            >
-              <Text style={styles.primaryText}>Register New Worker</Text>
-            </Pressable>
-          ) : null}
+        {captureResult?.matched ? (
+          <div className="status">
+            <strong>Matched worker</strong>
+            <p className="small">{captureResult.message}</p>
+          </div>
+        ) : null}
 
-          <Pressable style={styles.secondaryButton} onPress={reset}>
-            <Text style={styles.secondaryText}>Scan Another</Text>
-          </Pressable>
-        </>
-      )}
-    </View>
+        {captureResult && !captureResult.matched ? (
+          <div className="actions">
+            <button className="btn success" onClick={handleRegister}>Register New Worker</button>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="panel panel-pad workspace">
+        <div className="camera-shell">
+          {!captureResult?.photoSrc ? (
+            <>
+              <Webcam
+                ref={webcamRef}
+                audio={false}
+                screenshotFormat="image/jpeg"
+                screenshotQuality={0.9}
+                videoConstraints={{ facingMode: "user" }}
+              />
+              {liveBox ? (
+                <FaceBoxOverlay box={liveBox} sourceSize={{ width: 640, height: 480 }} displaySize={liveSize} color="#22c55e" />
+              ) : null}
+            </>
+          ) : (
+            <>
+              <img src={captureResult.photoSrc} alt="Captured face" />
+              {captureResult.box ? (
+                <FaceBoxOverlay box={captureResult.box} sourceSize={captureResult.sourceSize} displaySize={captureResult.displaySize} color={captureResult.color} />
+              ) : null}
+            </>
+          )}
+
+          <div className="scan-hint">
+            <div>
+              <strong>{captureResult ? "Scan complete" : "Live camera"}</strong>
+              <p>{captureResult?.message || "Align one face in the center of the frame."}</p>
+            </div>
+            {captureResult ? (
+              <button className="btn dark" onClick={() => setCaptureResult(null)}>Scan Another</button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 12,
-    backgroundColor: "#f8fafc"
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20
-  },
-  info: {
-    marginBottom: 12,
-    color: "#334155"
-  },
-  modeLabel: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#0f172a",
-    marginBottom: 10
-  },
-  cameraWrap: {
-    width: PREVIEW_WIDTH,
-    height: PREVIEW_HEIGHT,
-    borderRadius: 14,
-    overflow: "hidden",
-    alignSelf: "center",
-    backgroundColor: "#0f172a"
-  },
-  camera: {
-    width: "100%",
-    height: "100%"
-  },
-  previewWrap: {
-    width: PREVIEW_WIDTH,
-    height: PREVIEW_HEIGHT,
-    borderRadius: 14,
-    overflow: "hidden",
-    alignSelf: "center",
-    backgroundColor: "#0f172a"
-  },
-  previewImage: {
-    width: "100%",
-    height: "100%"
-  },
-  status: {
-    textAlign: "center",
-    marginVertical: 14,
-    fontSize: 16,
-    color: "#0f172a"
-  },
-  primaryButton: {
-    alignSelf: "center",
-    minWidth: 180,
-    backgroundColor: "#2563eb",
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: "center"
-  },
-  registerButton: {
-    alignSelf: "center",
-    minWidth: 220,
-    backgroundColor: "#ef4444",
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 8
-  },
-  secondaryButton: {
-    alignSelf: "center",
-    minWidth: 180,
-    borderColor: "#334155",
-    borderWidth: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center"
-  },
-  primaryText: {
-    color: "#ffffff",
-    fontWeight: "600",
-    fontSize: 16
-  },
-  secondaryText: {
-    color: "#334155",
-    fontWeight: "600",
-    fontSize: 16
-  },
-  disabled: {
-    opacity: 0.6
-  }
-});

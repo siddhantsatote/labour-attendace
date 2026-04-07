@@ -1,143 +1,82 @@
-import React, { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
 import { getAllWorkers, getTodayAttendanceWithWorkers } from "../lib/attendanceService";
 
-function WorkerRow({ item }) {
-  return (
-    <View style={styles.row}>
-      <Text style={styles.rowTitle}>{item.name}</Text>
-      <Text style={styles.rowSub}>{item.phone}</Text>
-    </View>
-  );
-}
-
-function AttendanceRow({ item }) {
-  const name = item.workers?.name || "Unknown";
-  const checkIn = item.check_in_time ? new Date(item.check_in_time).toLocaleTimeString() : "-";
-  const checkOut = item.check_out_time ? new Date(item.check_out_time).toLocaleTimeString() : "-";
-  const hours = item.hours_worked ?? "-";
-
-  return (
-    <View style={styles.row}>
-      <Text style={styles.rowTitle}>{name}</Text>
-      <Text style={styles.rowSub}>In: {checkIn} | Out: {checkOut} | Hours: {hours}</Text>
-    </View>
-  );
-}
-
-export default function AdminDashboardScreen() {
+export default function AdminDashboardScreen({ refreshKey, onBack }) {
   const [workers, setWorkers] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [allWorkers, todayAttendance] = await Promise.all([getAllWorkers(), getTodayAttendanceWithWorkers()]);
-      setWorkers(allWorkers);
-      setAttendance(todayAttendance);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    let active = true;
+
+    async function loadData() {
+      try {
+        setLoading(true);
+        setError("");
+        const [allWorkers, todayAttendance] = await Promise.all([getAllWorkers(), getTodayAttendanceWithWorkers()]);
+        if (!active) {
+          return;
+        }
+        setWorkers(allWorkers);
+        setAttendance(todayAttendance);
+      } catch (currentError) {
+        if (active) {
+          setError(currentError.message || "Unable to load dashboard.");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
     }
-  }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadData();
-    }, [loadData])
-  );
-
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#0ea5e9" />
-      </View>
-    );
-  }
+    loadData();
+    return () => {
+      active = false;
+    };
+  }, [refreshKey]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Workers</Text>
-      <FlatList
-        data={workers}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <WorkerRow item={item} />}
-        ListEmptyComponent={<Text style={styles.emptyText}>No workers registered yet.</Text>}
-        style={styles.list}
-      />
+    <section className="hero">
+      <div className="panel panel-pad workspace">
+        <p className="kicker">Admin dashboard</p>
+        <h2 className="section-title">Workers</h2>
+        <div className="list">
+          {loading ? <div className="status">Loading workers...</div> : null}
+          {error ? <div className="status" style={{ borderColor: "rgba(239, 68, 68, 0.35)" }}>{error}</div> : null}
+          {!loading && !workers.length ? <div className="status">No workers registered yet.</div> : null}
+          {workers.map((worker) => (
+            <div key={worker.id} className="list-item">
+              <h3>{worker.name}</h3>
+              <p>{worker.phone}</p>
+            </div>
+          ))}
+        </div>
 
-      <Text style={styles.header}>Today's Attendance</Text>
-      <FlatList
-        data={attendance}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <AttendanceRow item={item} />}
-        ListEmptyComponent={<Text style={styles.emptyText}>No attendance records for today.</Text>}
-      />
+        <div className="actions">
+          <button className="btn ghost" onClick={onBack}>Back</button>
+        </div>
+      </div>
 
-      <Pressable style={styles.refreshButton} onPress={loadData}>
-        <Text style={styles.refreshText}>Refresh</Text>
-      </Pressable>
-    </View>
+      <div className="panel panel-pad workspace">
+        <h2 className="section-title">Today's attendance</h2>
+        <div className="list">
+          {loading ? <div className="status">Loading attendance...</div> : null}
+          {!loading && !attendance.length ? <div className="status">No attendance records for today.</div> : null}
+          {attendance.map((record) => {
+            const workerName = record.workers?.name || "Unknown";
+            return (
+              <div key={record.id} className="list-item">
+                <h3>{workerName}</h3>
+                <p>Check-in: {record.check_in_time ? new Date(record.check_in_time).toLocaleTimeString() : "-"}</p>
+                <p>Check-out: {record.check_out_time ? new Date(record.check_out_time).toLocaleTimeString() : "-"}</p>
+                <p>Hours worked: {record.hours_worked ?? "-"}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f8fafc",
-    padding: 16
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  header: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#0f172a",
-    marginBottom: 8,
-    marginTop: 8
-  },
-  list: {
-    maxHeight: 220,
-    marginBottom: 10
-  },
-  row: {
-    backgroundColor: "#ffffff",
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "#e2e8f0"
-  },
-  rowTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#0f172a"
-  },
-  rowSub: {
-    fontSize: 14,
-    color: "#334155",
-    marginTop: 4
-  },
-  emptyText: {
-    color: "#64748b",
-    marginBottom: 12
-  },
-  refreshButton: {
-    marginTop: 12,
-    backgroundColor: "#0ea5e9",
-    borderRadius: 10,
-    alignItems: "center",
-    paddingVertical: 12
-  },
-  refreshText: {
-    color: "#ffffff",
-    fontWeight: "600",
-    fontSize: 16
-  }
-});
