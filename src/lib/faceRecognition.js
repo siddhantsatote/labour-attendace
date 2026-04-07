@@ -58,7 +58,7 @@ function detectInBrowserFromBase64(base64String) {
     };
 
     image.onerror = () => reject(new Error("Unable to load captured image for detection."));
-    image.src = `data:image/jpeg;base64,${base64String}`;
+    image.src = base64String.startsWith("data:") ? base64String : `data:image/jpeg;base64,${base64String}`;
   });
 }
 

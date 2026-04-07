@@ -12,6 +12,8 @@ export default function FaceBoxOverlay({ box, sourceSize, displaySize, color = "
     <div
       className="overlay"
       style={{
+        position: "absolute",
+        pointerEvents: "none",
         border: `3px solid ${color}`,
         borderRadius: 16,
         left: box.x * scaleX,

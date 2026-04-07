@@ -158,6 +158,11 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
     });
   }
 
+  const webcamStyle = useMemo(() => ({
+    width: "100%",
+    height: "100%"
+  }), []);
+
   return (
     <section className="hero">
       <div className="panel panel-pad workspace">
@@ -199,6 +204,7 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
                 screenshotFormat="image/jpeg"
                 screenshotQuality={0.9}
                 videoConstraints={{ facingMode: "user" }}
+                style={webcamStyle}
               />
               {liveBox ? (
                 <FaceBoxOverlay box={liveBox} sourceSize={{ width: 640, height: 480 }} displaySize={liveSize} color="#22c55e" />
