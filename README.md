@@ -43,6 +43,8 @@ Put these files in `public/models`:
 - face_recognition_model-shard1
 - face_recognition_model-shard2
 
+If these files are missing, the app will try a CDN fallback for model loading.
+
 ## Supabase SQL
 ```sql
 create extension if not exists "pgcrypto";

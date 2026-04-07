@@ -1,5 +1,7 @@
 let isReady = false;
 let faceapiModule = null;
+const LOCAL_MODEL_URI = "/models";
+const CDN_MODEL_URI = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model";
 
 async function getFaceApi() {
   if (!faceapiModule) {
@@ -15,13 +17,21 @@ export async function initializeFaceModels() {
   }
 
   const faceapi = await getFaceApi();
-  const modelBaseUri = "/models";
 
-  await Promise.all([
-    faceapi.nets.ssdMobilenetv1.loadFromUri(modelBaseUri),
-    faceapi.nets.faceLandmark68Net.loadFromUri(modelBaseUri),
-    faceapi.nets.faceRecognitionNet.loadFromUri(modelBaseUri)
-  ]);
+  async function loadAllModels(modelBaseUri) {
+    await Promise.all([
+      faceapi.nets.ssdMobilenetv1.loadFromUri(modelBaseUri),
+      faceapi.nets.faceLandmark68Net.loadFromUri(modelBaseUri),
+      faceapi.nets.faceRecognitionNet.loadFromUri(modelBaseUri)
+    ]);
+  }
+
+  try {
+    await loadAllModels(LOCAL_MODEL_URI);
+  } catch (localError) {
+    console.warn("Local face models not found at /models, trying CDN fallback.");
+    await loadAllModels(CDN_MODEL_URI);
+  }
 
   isReady = true;
 }
