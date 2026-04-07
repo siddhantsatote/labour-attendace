@@ -2,10 +2,6 @@ import { getSupabaseClient } from "./supabase";
 
 export const MATCH_THRESHOLD = 0.5;
 
-function createFallbackDescriptor() {
-  return Array.from({ length: 128 }, () => 0);
-}
-
 async function uploadWorkerPhoto(workerId, photoDataUrl) {
   if (!photoDataUrl || typeof photoDataUrl !== "string") {
     return null;
@@ -60,7 +56,11 @@ export async function getAllWorkers() {
 
 export async function registerWorkerAndCheckIn({ name, phone, descriptor, photoDataUrl }) {
   const supabase = getSupabaseClient();
-  const safeDescriptor = Array.isArray(descriptor) && descriptor.length === 128 ? descriptor : createFallbackDescriptor();
+  const safeDescriptor = Array.isArray(descriptor) && descriptor.length === 128 ? descriptor : null;
+
+  if (!safeDescriptor) {
+    throw new Error("Face descriptor missing. Please rescan and keep the face clearly visible.");
+  }
 
   const { data: worker, error: workerError } = await supabase
     .from("workers")

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { registerWorkerAndCheckIn } from "../lib/attendanceService";
 import FaceBoxOverlay from "../components/FaceBoxOverlay";
+import { detectFaceAndDescriptorFromBase64 } from "../lib/faceRecognition";
 
 export default function RegisterScreen({ workerDraft, onBack, onSaved }) {
   const [name, setName] = useState("");
@@ -26,10 +27,21 @@ export default function RegisterScreen({ workerDraft, onBack, onSaved }) {
     try {
       setSaving(true);
       setError("");
+
+      let descriptorToSave = preview.descriptor;
+      if (!descriptorToSave) {
+        const fallbackDetection = await detectFaceAndDescriptorFromBase64(preview.photoSrc);
+        descriptorToSave = fallbackDetection?.descriptor || null;
+      }
+
+      if (!descriptorToSave) {
+        throw new Error("Could not extract face descriptor from the photo. Please scan again with a clear face.");
+      }
+
       await registerWorkerAndCheckIn({
         name: name.trim(),
         phone: phone.trim(),
-        descriptor: preview.descriptor,
+        descriptor: descriptorToSave,
         photoDataUrl: preview.photoSrc
       });
       onSaved?.();
@@ -48,7 +60,7 @@ export default function RegisterScreen({ workerDraft, onBack, onSaved }) {
         <p className="small">Saving this worker also creates a check-in record automatically.</p>
         {!preview?.descriptor ? (
           <div className="status" style={{ borderColor: "rgba(245, 158, 11, 0.35)" }}>
-            Face descriptor unavailable from scan. Worker will be saved as new labour with photo and fallback descriptor.
+            Face descriptor unavailable from scan. The app will re-extract descriptor from this photo before saving.
           </div>
         ) : null}
 

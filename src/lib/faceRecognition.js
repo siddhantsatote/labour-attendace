@@ -109,9 +109,22 @@ export function euclideanDistance(descriptorA, descriptorB) {
 export function findBestMatch(targetDescriptor, workers, threshold = 0.5) {
   let best = null;
 
+  const isValidDescriptor = (value) => {
+    if (!Array.isArray(value) || value.length !== 128) {
+      return false;
+    }
+
+    // Ignore placeholder descriptors like [0,0,0,...] because they break matching quality.
+    return value.some((n) => Number(n) !== 0);
+  };
+
+  if (!isValidDescriptor(targetDescriptor)) {
+    return null;
+  }
+
   for (const worker of workers) {
     const stored = worker.face_descriptor;
-    if (!Array.isArray(stored)) {
+    if (!isValidDescriptor(stored)) {
       continue;
     }
 
