@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getSupabaseClient } from "./supabase";
 
 export const MATCH_THRESHOLD = 0.5;
 
@@ -19,6 +19,7 @@ export function calculateHoursWorked(checkInIso, checkOutIso) {
 }
 
 export async function getAllWorkers() {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("workers")
     .select("id, name, phone, face_descriptor, created_at")
@@ -32,6 +33,7 @@ export async function getAllWorkers() {
 }
 
 export async function registerWorkerAndCheckIn({ name, phone, descriptor }) {
+  const supabase = getSupabaseClient();
   const { data: worker, error: workerError } = await supabase
     .from("workers")
     .insert({
@@ -52,6 +54,7 @@ export async function registerWorkerAndCheckIn({ name, phone, descriptor }) {
 }
 
 export async function checkInWorker(workerId) {
+  const supabase = getSupabaseClient();
   const today = getTodayDateString();
 
   const { data: existing, error: existingError } = await supabase
@@ -97,6 +100,7 @@ export async function checkInWorker(workerId) {
 }
 
 export async function checkOutWorker(workerId) {
+  const supabase = getSupabaseClient();
   const today = getTodayDateString();
 
   const { data: openAttendance, error: openError } = await supabase
@@ -143,6 +147,7 @@ export async function checkOutWorker(workerId) {
 }
 
 export async function getTodayAttendanceWithWorkers() {
+  const supabase = getSupabaseClient();
   const today = getTodayDateString();
 
   const { data, error } = await supabase
