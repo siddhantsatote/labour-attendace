@@ -731,6 +731,8 @@ body {
 .register-screen {
   display: grid;
   gap: 14px;
+  align-content: start;
+  grid-auto-rows: max-content;
 }
 
 .camera-page {
@@ -777,6 +779,9 @@ body {
 }
 
 .icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 42px;
   height: 42px;
   border-radius: 999px;
@@ -802,6 +807,13 @@ body {
 .history-trash:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.camera-dock-button,
+.history-trash {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .home-topbar,
@@ -1389,10 +1401,13 @@ body {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+  align-items: center;
 }
 
 .history-tab {
-  min-height: 44px;
+  min-height: 52px;
+  height: 52px;
+  align-self: center;
   border-radius: 999px;
   padding: 0 12px;
   background: rgba(255, 255, 255, 0.86);
