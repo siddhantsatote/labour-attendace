@@ -7,6 +7,7 @@ import { detectFaceAndDescriptorFromBase64, detectFaceAndDescriptorFromVideo, fi
 export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSaved }) {
   const webcamRef = useRef(null);
   const liveTimerRef = useRef(null);
+  const [facingMode, setFacingMode] = useState("user");
   const [loadingModels, setLoadingModels] = useState(true);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("Open the camera and scan a face.");
@@ -72,7 +73,7 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
         window.clearInterval(liveTimerRef.current);
       }
     };
-  }, [loadingModels, captureResult]);
+  }, [loadingModels, captureResult, facingMode]);
 
   async function handleCapture() {
     const webcam = webcamRef.current;
@@ -181,6 +182,13 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
     });
   }
 
+  function toggleCamera() {
+    setFacingMode((value) => (value === "user" ? "environment" : "user"));
+    setCaptureResult(null);
+    setLiveBox(null);
+    setStatus("Camera switched. Align one face and scan.");
+  }
+
   const webcamStyle = useMemo(() => ({
     width: "100%",
     height: "100%"
@@ -192,21 +200,15 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
         <p className="kicker">Face scan</p>
         <h2 className="section-title">{title}</h2>
         <p className="small">{modeHint}</p>
-        <div className="tag-row">
-          <span className="tag good">Green = matched worker</span>
-          <span className="tag bad">Red = new face</span>
-        </div>
-
-        <div className="actions">
-          <button className="btn ghost" onClick={onBack}>Home</button>
-          <button className="btn primary" onClick={handleCapture} disabled={busy || loadingModels}>Scan</button>
-        </div>
-
         <div className="status">{loadingModels ? "Loading face models..." : status}</div>
+        <div className="tag-row">
+          <span className="tag good">Green box: matched labour</span>
+          <span className="tag bad">Red box: new labour</span>
+        </div>
 
         {captureResult?.matched ? (
           <div className="status">
-            <strong>Matched worker</strong>
+            <strong>Matched labour</strong>
             <p className="small">{captureResult.message}</p>
           </div>
         ) : null}
@@ -219,7 +221,7 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
       </div>
 
       <div className="panel panel-pad workspace">
-        <div className="camera-shell">
+        <div className="camera-lens-shell">
           {!captureResult?.photoSrc ? (
             <>
               <Webcam
@@ -227,7 +229,7 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
                 audio={false}
                 screenshotFormat="image/jpeg"
                 screenshotQuality={0.9}
-                videoConstraints={{ facingMode: "user" }}
+                videoConstraints={{ facingMode }}
                 style={webcamStyle}
               />
               {liveBox ? (
@@ -243,14 +245,35 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
             </>
           )}
 
-          <div className="scan-hint">
-            <div>
-              <strong>{captureResult ? "Scan complete" : "Live camera"}</strong>
-              <p>{captureResult?.message || "Align one face in the center and tap Scan."}</p>
+          <div className="lens-top-bar">
+            <button className="lens-icon-btn" onClick={onBack} aria-label="Back to home">←</button>
+            <div className="lens-title">Attendance Scan</div>
+            <button className="lens-icon-btn" onClick={toggleCamera} disabled={busy} aria-label="Switch camera">
+              ↺
+            </button>
+          </div>
+
+          <div className="lens-reticle" aria-hidden="true">
+            <span className="corner top-left" />
+            <span className="corner top-right" />
+            <span className="corner bottom-left" />
+            <span className="corner bottom-right" />
+          </div>
+
+          <div className="lens-bottom-dock">
+            <div className="lens-status-chip">
+              {captureResult ? "Result ready" : `Mode: ${title}`}
             </div>
+
+            <button className="lens-capture-btn" onClick={handleCapture} disabled={busy || loadingModels}>
+              <span className="lens-capture-inner" />
+            </button>
+
             {captureResult ? (
-              <button className="btn dark" onClick={() => setCaptureResult(null)}>Scan Another</button>
-            ) : null}
+              <button className="lens-text-btn" onClick={() => setCaptureResult(null)}>Rescan</button>
+            ) : (
+              <span className="lens-text-placeholder" />
+            )}
           </div>
         </div>
       </div>

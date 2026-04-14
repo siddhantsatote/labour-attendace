@@ -120,6 +120,7 @@ h1 {
   border: 1px solid transparent;
   border-radius: 12px;
   padding: 12px 16px;
+  min-height: 46px;
   font-weight: 700;
   cursor: pointer;
   transition: transform 140ms ease, opacity 140ms ease, box-shadow 140ms ease;
@@ -206,12 +207,189 @@ h1 {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 5;
-  min-height: 380px;
+  min-height: 420px;
   border-radius: 16px;
   overflow: hidden;
   background: #e2e8f0;
   border: 1px solid var(--line);
   box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+}
+
+.camera-lens-shell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  min-height: 520px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #0f172a;
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 26px rgba(15, 23, 42, 0.2);
+}
+
+.camera-lens-shell video,
+.camera-lens-shell img,
+.camera-lens-shell canvas.overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lens-top-bar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  z-index: 4;
+}
+
+.lens-title {
+  color: #ffffff;
+  font-size: 1.06rem;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.lens-icon-btn {
+  border: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.62);
+  color: #ffffff;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lens-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lens-reticle {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: min(62vw, 270px);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+}
+
+.lens-reticle .corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-color: rgba(255, 255, 255, 0.72);
+  border-style: solid;
+}
+
+.lens-reticle .top-left {
+  top: 0;
+  left: 0;
+  border-width: 3px 0 0 3px;
+  border-top-left-radius: 12px;
+}
+
+.lens-reticle .top-right {
+  top: 0;
+  right: 0;
+  border-width: 3px 3px 0 0;
+  border-top-right-radius: 12px;
+}
+
+.lens-reticle .bottom-left {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 3px 3px;
+  border-bottom-left-radius: 12px;
+}
+
+.lens-reticle .bottom-right {
+  bottom: 0;
+  right: 0;
+  border-width: 0 3px 3px 0;
+  border-bottom-right-radius: 12px;
+}
+
+.lens-bottom-dock {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  background: rgba(17, 24, 39, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+  padding: 10px 12px;
+  backdrop-filter: blur(8px);
+}
+
+.lens-status-chip {
+  justify-self: start;
+  color: #f8fafc;
+  font-size: 0.84rem;
+  background: rgba(15, 23, 42, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+
+.lens-capture-btn {
+  justify-self: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.14);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.lens-capture-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.lens-capture-inner {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.lens-text-btn,
+.lens-text-placeholder {
+  justify-self: end;
+  min-width: 68px;
+}
+
+.lens-text-btn {
+  border: 0;
+  background: rgba(15, 23, 42, 0.7);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lens-text-placeholder {
+  display: inline-block;
+  height: 34px;
 }
 
 .camera-shell video,
@@ -384,5 +562,66 @@ h1 {
 
   .actions .btn {
     width: 100%;
+  }
+
+  .camera-shell {
+    aspect-ratio: 3 / 4;
+    min-height: 62vh;
+    border-radius: 14px;
+  }
+
+  .camera-lens-shell {
+    min-height: 68vh;
+    border-radius: 14px;
+  }
+
+  .scan-hint {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .panel-pad {
+    padding: 12px;
+  }
+
+  .actions {
+    position: sticky;
+    bottom: 8px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0), #ffffff 35%);
+    padding-top: 10px;
+    z-index: 5;
+  }
+
+  .camera-lens-shell {
+    min-height: 72vh;
+    border-radius: 12px;
+  }
+
+  .lens-title {
+    font-size: 0.98rem;
+  }
+
+  .lens-capture-btn {
+    width: 68px;
+    height: 68px;
+  }
+
+  .lens-capture-inner {
+    width: 50px;
+    height: 50px;
+  }
+
+  .lens-status-chip {
+    font-size: 0.78rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .app-title {
+    font-size: 1.05rem;
   }
 }
