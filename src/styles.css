@@ -190,6 +190,53 @@ h1 {
   gap: 12px;
 }
 
+.home-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.home-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.home-list-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.list-item-compact {
+  display: grid;
+  gap: 8px;
+}
+
+.home-list-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.92rem;
+}
+
+.home-list-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.status-soft {
+  background: #ffffff;
+}
+
+.error-box {
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
 .mode-pill {
   display: inline-flex;
   gap: 8px;
@@ -552,7 +599,10 @@ h1 {
     align-items: flex-start;
   }
 
-  .card-grid {
+  .card-grid,
+  .home-summary-grid,
+  .home-list-grid,
+  .home-dashboard-grid {
     grid-template-columns: 1fr;
   }
 
@@ -560,7 +610,8 @@ h1 {
     padding: 14px;
   }
 
-  .actions .btn {
+  .actions .btn,
+  .home-quick-actions .btn {
     width: 100%;
   }
 
@@ -586,12 +637,18 @@ h1 {
     padding: 12px;
   }
 
-  .actions {
+  .actions,
+  .home-quick-actions {
     position: sticky;
     bottom: 8px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0), #ffffff 35%);
     padding-top: 10px;
     z-index: 5;
+  }
+
+  .home-summary-grid,
+  .home-list-grid {
+    grid-template-columns: 1fr;
   }
 
   .camera-lens-shell {
