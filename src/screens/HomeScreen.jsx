@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Camera, Menu, MoreHorizontal } from "lucide-react";
 import MobileBottomNav from "../components/MobileBottomNav";
 import { getAllWorkers, getTodayAttendanceWithWorkers } from "../lib/attendanceService";
 
@@ -70,18 +71,9 @@ export default function HomeScreen({ onOpenCamera, onOpenHistory }) {
 
   return (
     <section className="mobile-screen home-screen">
-      <div className="status-bar" aria-label="Device status">
-        <span>9:41</span>
-        <div className="status-bar-icons" aria-hidden="true">
-          <span>◌◌◌</span>
-          <span>▂▅</span>
-          <span>◍</span>
-        </div>
-      </div>
-
       <div className="home-topbar">
         <button className="icon-button outline" type="button" aria-label="Open menu">
-          ☰
+          <Menu className="icon-svg" size={18} strokeWidth={2.2} />
         </button>
 
         <div className="home-topbar-copy">
@@ -92,10 +84,10 @@ export default function HomeScreen({ onOpenCamera, onOpenHistory }) {
 
         <div className="home-topbar-actions">
           <button className="icon-button outline" type="button" onClick={onOpenCamera} aria-label="Open camera">
-            ⌁
+            <Camera className="icon-svg" size={18} strokeWidth={2.2} />
           </button>
           <button className="icon-button outline" type="button" onClick={onOpenHistory} aria-label="Open attendance history">
-            ⋯
+            <MoreHorizontal className="icon-svg" size={18} strokeWidth={2.2} />
           </button>
         </div>
       </div>

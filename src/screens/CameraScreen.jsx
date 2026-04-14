@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, Images, RefreshCcw } from "lucide-react";
 import Webcam from "react-webcam";
 import FaceBoxOverlay from "../components/FaceBoxOverlay";
 import { checkInWorker, checkOutWorker, getAllWorkers, MATCH_THRESHOLD } from "../lib/attendanceService";
@@ -234,7 +235,7 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
 
         <div className="camera-topbar">
           <button className="icon-button dark" type="button" onClick={onBack} aria-label="Back">
-            ←
+            <ArrowLeft className="icon-svg" size={18} strokeWidth={2.2} />
           </button>
 
           <div className="camera-topbar-copy">
@@ -244,7 +245,7 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
           </div>
 
           <button className="icon-button dark" type="button" onClick={toggleCamera} disabled={busy} aria-label="Flip camera">
-            ↺
+            <RefreshCcw className="icon-svg" size={18} strokeWidth={2.2} />
           </button>
         </div>
 
@@ -260,7 +261,7 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
         {!captureResult ? (
           <div className="camera-dock">
             <button className="camera-dock-button" type="button" onClick={toggleCamera} disabled={busy} aria-label="Flip camera">
-              ↺
+              <RefreshCcw className="icon-svg" size={18} strokeWidth={2.2} />
             </button>
 
             <button className="camera-capture-button" type="button" onClick={handleCapture} disabled={busy || loadingModels} aria-label="Capture face">
@@ -268,7 +269,7 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
             </button>
 
             <button className="camera-dock-button" type="button" disabled aria-label="Open gallery">
-              ◫
+              <Images className="icon-svg" size={18} strokeWidth={2.2} />
             </button>
           </div>
         ) : (

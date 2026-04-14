@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, MoreHorizontal, ScanFace, Trash2 } from "lucide-react";
 import MobileBottomNav from "../components/MobileBottomNav";
 import { getAttendanceHistoryWithWorkers } from "../lib/attendanceService";
 
@@ -87,11 +88,11 @@ export default function AdminDashboardScreen({ refreshKey, onBack, onOpenCamera,
     <section className="mobile-screen history-screen">
       <div className="history-topbar">
         <button className="icon-button outline" type="button" onClick={onBack} aria-label="Go back">
-          ←
+          <ArrowLeft className="icon-svg" size={18} strokeWidth={2.2} />
         </button>
         <h2 className="history-title">Attendance History</h2>
         <button className="icon-button outline" type="button" aria-label="Open menu">
-          ⋯
+          <MoreHorizontal className="icon-svg" size={18} strokeWidth={2.2} />
         </button>
       </div>
 
@@ -111,13 +112,13 @@ export default function AdminDashboardScreen({ refreshKey, onBack, onOpenCamera,
 
           return (
             <article key={record.id} className="history-row">
-              <div className="history-icon">◧</div>
+              <div className="history-icon"><ScanFace className="icon-svg" size={18} strokeWidth={2.2} /></div>
               <div className="history-copy">
                 <strong>{workerName}</strong>
                 <span>{formatTime(record.check_in_time)} · {record.date || ""}</span>
               </div>
               <button className="history-trash" type="button" aria-label={`Delete ${workerName}`}>
-                🗑
+                <Trash2 className="icon-svg" size={16} strokeWidth={2.2} />
               </button>
             </article>
           );

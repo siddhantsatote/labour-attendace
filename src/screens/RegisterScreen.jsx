@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { registerWorkerAndCheckIn } from "../lib/attendanceService";
 import FaceBoxOverlay from "../components/FaceBoxOverlay";
 import { detectFaceAndDescriptorFromBase64 } from "../lib/faceRecognition";
@@ -56,7 +57,7 @@ export default function RegisterScreen({ workerDraft, onBack, onSaved }) {
     <section className="mobile-screen register-screen">
       <div className="register-topbar">
         <button className="icon-button outline" type="button" onClick={onBack} aria-label="Go back">
-          ←
+          <ArrowLeft className="icon-svg" size={18} strokeWidth={2.2} />
         </button>
         <div>
           <p className="eyebrow">New labour</p>

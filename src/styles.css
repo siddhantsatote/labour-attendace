@@ -771,6 +771,11 @@ body {
   font: inherit;
 }
 
+.icon-svg {
+  display: block;
+  flex-shrink: 0;
+}
+
 .icon-button {
   width: 42px;
   height: 42px;
@@ -797,23 +802,6 @@ body {
 .history-trash:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
-
-.status-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: rgba(15, 23, 42, 0.78);
-  font-size: 0.86rem;
-  font-weight: 700;
-  padding: 2px 4px 0;
-}
-
-.status-bar-icons {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: rgba(15, 23, 42, 0.58);
 }
 
 .home-topbar,
