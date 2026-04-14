@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Camera, Menu, MoreHorizontal } from "lucide-react";
+import { Camera, LogOut, Menu, MoreHorizontal } from "lucide-react";
 import MobileBottomNav from "../components/MobileBottomNav";
 import { getAllWorkers, getTodayAttendanceWithWorkers } from "../lib/attendanceService";
 
@@ -22,7 +22,7 @@ function getInitials(name) {
     .join("");
 }
 
-export default function HomeScreen({ onOpenCamera, onOpenHistory }) {
+export default function HomeScreen({ onOpenCheckIn, onOpenCheckOut, onOpenHistory }) {
   const [workers, setWorkers] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,13 +83,25 @@ export default function HomeScreen({ onOpenCamera, onOpenHistory }) {
         </div>
 
         <div className="home-topbar-actions">
-          <button className="icon-button outline" type="button" onClick={onOpenCamera} aria-label="Open camera">
+          <button className="icon-button outline" type="button" onClick={onOpenCheckIn} aria-label="Open check in camera">
             <Camera className="icon-svg" size={18} strokeWidth={2.2} />
+          </button>
+          <button className="icon-button outline" type="button" onClick={onOpenCheckOut} aria-label="Open check out camera">
+            <LogOut className="icon-svg" size={18} strokeWidth={2.2} />
           </button>
           <button className="icon-button outline" type="button" onClick={onOpenHistory} aria-label="Open attendance history">
             <MoreHorizontal className="icon-svg" size={18} strokeWidth={2.2} />
           </button>
         </div>
+      </div>
+
+      <div className="home-mode-actions">
+        <button className="mode-action mode-action-check-in" type="button" onClick={onOpenCheckIn}>
+          Check In
+        </button>
+        <button className="mode-action mode-action-check-out" type="button" onClick={onOpenCheckOut}>
+          Check Out
+        </button>
       </div>
 
       <div className="stat-grid">
@@ -146,7 +158,7 @@ export default function HomeScreen({ onOpenCamera, onOpenHistory }) {
         </div>
       </section>
 
-      <MobileBottomNav onCamera={onOpenCamera} onScan={onOpenCamera} onPerson={onOpenHistory} />
+      <MobileBottomNav onCamera={onOpenCheckIn} onScan={onOpenCheckIn} onPerson={onOpenHistory} />
     </section>
   );
 }

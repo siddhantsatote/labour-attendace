@@ -41,7 +41,8 @@ export default function App() {
       <div className="container">
         {screen === "home" ? (
           <HomeScreen
-            onOpenCamera={() => navigation.openCamera("check_in")}
+            onOpenCheckIn={() => navigation.openCamera("check_in")}
+            onOpenCheckOut={() => navigation.openCamera("check_out")}
             onOpenHistory={navigation.openDashboard}
           />
         ) : null}

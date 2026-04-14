@@ -298,20 +298,32 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
                 <span>Check-in Time</span>
                 <strong>{captureResult.record?.check_in_time ? new Date(captureResult.record.check_in_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "--:--"}</strong>
               </div>
+              {mode === "check_out" ? (
+                <div className="scan-detail-card">
+                  <span>Check-out Time</span>
+                  <strong>{captureResult.record?.check_out_time ? new Date(captureResult.record.check_out_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "--:--"}</strong>
+                </div>
+              ) : null}
+              {mode === "check_out" ? (
+                <div className="scan-detail-card">
+                  <span>Hours Worked</span>
+                  <strong>{captureResult.record?.hours_worked != null ? `${captureResult.record.hours_worked.toFixed(2)} hrs` : "--"}</strong>
+                </div>
+              ) : null}
               <div className="scan-detail-card">
                 <span>Date</span>
                 <strong>{captureResult.record?.date || new Date().toLocaleDateString()}</strong>
               </div>
               <div className="scan-detail-card full-width">
                 <span>Status</span>
-                <strong className={captureResult.matched ? "status-positive" : "status-warning"}>{captureResult.matched ? "Active" : "Needs Registration"}</strong>
+                <strong className={captureResult.matched ? "status-positive" : "status-warning"}>{captureResult.matched ? (mode === "check_out" ? "Checked Out" : "Active") : "Needs Registration"}</strong>
               </div>
             </div>
 
             <div className="scan-sheet-actions">
               {captureResult.matched ? (
                 <button className="btn primary" type="button" onClick={onBack}>
-                  Confirm Check-In
+                  {mode === "check_in" ? "Confirm Check-In" : "Confirm Check-Out"}
                 </button>
               ) : (
                 <button className="btn primary" type="button" onClick={handleRegister}>
