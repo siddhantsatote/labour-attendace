@@ -95,15 +95,6 @@ export default function HomeScreen({ onOpenCheckIn, onOpenCheckOut, onOpenHistor
         </div>
       </div>
 
-      <div className="home-mode-actions">
-        <button className="mode-action mode-action-check-in" type="button" onClick={onOpenCheckIn}>
-          Check In
-        </button>
-        <button className="mode-action mode-action-check-out" type="button" onClick={onOpenCheckOut}>
-          Check Out
-        </button>
-      </div>
-
       <div className="stat-grid">
         <article className="stat-card">
           <span className="stat-label">Registered Workers</span>

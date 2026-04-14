@@ -837,31 +837,6 @@ body {
   gap: 8px;
 }
 
-.home-mode-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.mode-action {
-  min-height: 46px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.mode-action-check-in {
-  color: #ffffff;
-  background: linear-gradient(180deg, #19d08a 0%, #16c784 100%);
-  box-shadow: 0 12px 24px rgba(22, 199, 132, 0.26);
-}
-
-.mode-action-check-out {
-  color: #ffffff;
-  background: linear-gradient(180deg, #4f61ff 0%, #3137f0 100%);
-  box-shadow: 0 12px 24px rgba(61, 59, 243, 0.24);
-}
 
 .eyebrow,
 .section-kicker {
@@ -1162,6 +1137,33 @@ body {
   right: 14px;
   z-index: 4;
   grid-template-columns: auto 1fr auto;
+}
+
+.camera-mode-toggle {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.camera-mode-button {
+  flex: 1;
+  min-height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 700;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.camera-mode-button.active {
+  background: #ffffff;
+  color: #0b1021;
+  box-shadow: 0 12px 18px rgba(61, 59, 243, 0.16);
+}
+
+.camera-mode-button:hover {
+  transform: translateY(-1px);
 }
 
 .camera-title {
