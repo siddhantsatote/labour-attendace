@@ -877,7 +877,10 @@ body {
 }
 
 .stat-card {
-  padding: 14px 12px;
+  padding: 12px 10px;
+  min-height: 86px;
+  display: grid;
+  align-content: center;
   background: linear-gradient(180deg, #ffffff 0%, #f7f8ff 100%);
   border-radius: 22px;
   border: 1px solid rgba(61, 59, 243, 0.08);
@@ -887,14 +890,14 @@ body {
 .stat-label {
   display: block;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   line-height: 1.25;
 }
 
 .stat-value {
   display: block;
-  margin-top: 8px;
-  font-size: 1.4rem;
+  margin-top: 6px;
+  font-size: 1.9rem;
   font-weight: 900;
   letter-spacing: -0.03em;
   color: #0b1021;
@@ -916,6 +919,10 @@ body {
 .register-card {
   border-radius: 28px;
   padding: 16px;
+}
+
+.home-screen .section-card {
+  margin-bottom: 4px;
 }
 
 .section-heading-row {
@@ -1516,8 +1523,26 @@ body {
     padding-bottom: 118px;
   }
 
-  .stat-grid {
-    grid-template-columns: 1fr;
+  .home-screen {
+    gap: 12px;
+  }
+
+  .home-screen .stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .home-screen .stat-card {
+    border-radius: 18px;
+    min-height: 78px;
+  }
+
+  .home-screen .stat-label {
+    font-size: 0.72rem;
+  }
+
+  .home-screen .stat-value {
+    font-size: 1.45rem;
   }
 
   .scan-detail-grid {
