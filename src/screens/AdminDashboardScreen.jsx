@@ -40,8 +40,8 @@ export default function AdminDashboardScreen({ refreshKey, onBack }) {
   return (
     <section className="hero">
       <div className="panel panel-pad workspace">
-        <p className="kicker">Admin dashboard</p>
-        <h2 className="section-title">Workers</h2>
+        <p className="kicker">Dashboard</p>
+        <h2 className="section-title">Registered Labours</h2>
         <div className="list">
           {loading ? <div className="status">Loading workers...</div> : null}
           {error ? <div className="status" style={{ borderColor: "rgba(239, 68, 68, 0.35)" }}>{error}</div> : null}
@@ -55,12 +55,12 @@ export default function AdminDashboardScreen({ refreshKey, onBack }) {
         </div>
 
         <div className="actions">
-          <button className="btn ghost" onClick={onBack}>Back</button>
+          <button className="btn ghost" onClick={onBack}>Home</button>
         </div>
       </div>
 
       <div className="panel panel-pad workspace">
-        <h2 className="section-title">Today's attendance</h2>
+        <h2 className="section-title">Today's Attendance</h2>
         <div className="list">
           {loading ? <div className="status">Loading attendance...</div> : null}
           {!loading && !attendance.length ? <div className="status">No attendance records for today.</div> : null}

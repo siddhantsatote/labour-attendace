@@ -55,9 +55,9 @@ export default function RegisterScreen({ workerDraft, onBack, onSaved }) {
   return (
     <section className="hero">
       <div className="panel panel-pad workspace">
-        <p className="kicker">New worker</p>
-        <h2 className="section-title">Register the new face</h2>
-        <p className="small">Saving this worker also creates a check-in record automatically.</p>
+        <p className="kicker">New labour</p>
+        <h2 className="section-title">Register new labour details</h2>
+        <p className="small">After saving, this labour will be checked in automatically.</p>
         {!preview?.descriptor ? (
           <div className="status" style={{ borderColor: "rgba(245, 158, 11, 0.35)" }}>
             Face descriptor unavailable from scan. The app will re-extract descriptor from this photo before saving.
@@ -69,17 +69,17 @@ export default function RegisterScreen({ workerDraft, onBack, onSaved }) {
         <form className="form" onSubmit={handleSubmit}>
           <div className="field">
             <label htmlFor="name">Name</label>
-            <input id="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Worker name" />
+            <input id="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Enter full name" />
           </div>
 
           <div className="field">
             <label htmlFor="phone">Phone Number</label>
-            <input id="phone" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Phone number" />
+            <input id="phone" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Enter mobile number" />
           </div>
 
           <div className="actions">
             <button className="btn primary" type="submit" disabled={saving}>{saving ? "Saving..." : "Save and Check In"}</button>
-            <button className="btn ghost" type="button" onClick={onBack}>Back</button>
+            <button className="btn ghost" type="button" onClick={onBack}>Cancel</button>
           </div>
         </form>
       </div>

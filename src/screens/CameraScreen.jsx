@@ -15,6 +15,7 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
   const [captureResult, setCaptureResult] = useState(null);
 
   const title = mode === "check_in" ? "Check In" : "Check Out";
+  const modeHint = mode === "check_in" ? "Mark worker arrival" : "Mark worker departure";
 
   useEffect(() => {
     let active = true;
@@ -190,13 +191,14 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
       <div className="panel panel-pad workspace">
         <p className="kicker">Face scan</p>
         <h2 className="section-title">{title}</h2>
+        <p className="small">{modeHint}</p>
         <div className="tag-row">
           <span className="tag good">Green = matched worker</span>
           <span className="tag bad">Red = new face</span>
         </div>
 
         <div className="actions">
-          <button className="btn ghost" onClick={onBack}>Back</button>
+          <button className="btn ghost" onClick={onBack}>Home</button>
           <button className="btn primary" onClick={handleCapture} disabled={busy || loadingModels}>Scan</button>
         </div>
 
@@ -211,7 +213,7 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
 
         {captureResult && !captureResult.matched ? (
           <div className="actions">
-            <button className="btn success" onClick={handleRegister}>Save as New Labour</button>
+            <button className="btn success" onClick={handleRegister}>Register New Labour</button>
           </div>
         ) : null}
       </div>
@@ -244,7 +246,7 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
           <div className="scan-hint">
             <div>
               <strong>{captureResult ? "Scan complete" : "Live camera"}</strong>
-              <p>{captureResult?.message || "Align one face in the center of the frame."}</p>
+              <p>{captureResult?.message || "Align one face in the center and tap Scan."}</p>
             </div>
             {captureResult ? (
               <button className="btn dark" onClick={() => setCaptureResult(null)}>Scan Another</button>
