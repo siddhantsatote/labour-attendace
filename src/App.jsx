@@ -39,16 +39,11 @@ export default function App() {
   return (
     <div className="app-shell">
       <div className="container">
-        <header className="app-header panel">
-          <div>
-            <p className="kicker">Labour Attendance</p>
-            <h2 className="app-title">Face Attendance Console</h2>
-          </div>
-          <p className="app-subtitle">Simple check-in and check-out for site supervisors</p>
-        </header>
-
         {screen === "home" ? (
-          <HomeScreen onCheckIn={() => navigation.openCamera("check_in")} onCheckOut={() => navigation.openCamera("check_out")} onDashboard={navigation.openDashboard} />
+          <HomeScreen
+            onOpenCamera={() => navigation.openCamera("check_in")}
+            onOpenHistory={navigation.openDashboard}
+          />
         ) : null}
 
         {screen === "camera" ? (
@@ -65,7 +60,12 @@ export default function App() {
         ) : null}
 
         {screen === "dashboard" ? (
-          <AdminDashboardScreen refreshKey={dashboardTick} onBack={navigation.openHome} />
+          <AdminDashboardScreen
+            refreshKey={dashboardTick}
+            onBack={navigation.openHome}
+            onOpenCamera={() => navigation.openCamera("check_in")}
+            onOpenHome={navigation.openHome}
+          />
         ) : null}
       </div>
     </div>

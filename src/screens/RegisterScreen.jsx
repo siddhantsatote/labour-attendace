@@ -53,22 +53,38 @@ export default function RegisterScreen({ workerDraft, onBack, onSaved }) {
   }
 
   return (
-    <section className="hero">
-      <div className="panel panel-pad workspace">
-        <p className="kicker">New labour</p>
-        <h2 className="section-title">Register new labour details</h2>
-        <p className="small">After saving, this labour will be checked in automatically.</p>
+    <section className="mobile-screen register-screen">
+      <div className="register-topbar">
+        <button className="icon-button outline" type="button" onClick={onBack} aria-label="Go back">
+          ←
+        </button>
+        <div>
+          <p className="eyebrow">New labour</p>
+          <h2 className="screen-title">Register worker</h2>
+        </div>
+      </div>
+
+      <div className="surface-card register-card">
+        <p className="screen-subtitle">After saving, this labour will be checked in automatically.</p>
+
         {!preview?.descriptor ? (
-          <div className="status" style={{ borderColor: "rgba(245, 158, 11, 0.35)" }}>
+          <div className="alert-card warning-card">
             Face descriptor unavailable from scan. The app will re-extract descriptor from this photo before saving.
           </div>
         ) : null}
 
-        {error ? <div className="status" style={{ borderColor: "rgba(239, 68, 68, 0.35)" }}>{error}</div> : null}
+        {error ? <div className="alert-card">{error}</div> : null}
+
+        <div className="register-preview">
+          {preview?.photoSrc ? <img src={preview.photoSrc} alt="Detected face preview" /> : null}
+          {preview?.box && preview?.sourceSize && preview?.displaySize ? (
+            <FaceBoxOverlay box={preview.box} sourceSize={preview.sourceSize} displaySize={preview.displaySize} color="#3D3BF3" />
+          ) : null}
+        </div>
 
         <form className="form" onSubmit={handleSubmit}>
           <div className="field">
-            <label htmlFor="name">Name</label>
+            <label htmlFor="name">Worker Name</label>
             <input id="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Enter full name" />
           </div>
 
@@ -77,21 +93,11 @@ export default function RegisterScreen({ workerDraft, onBack, onSaved }) {
             <input id="phone" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Enter mobile number" />
           </div>
 
-          <div className="actions">
+          <div className="register-actions">
             <button className="btn primary" type="submit" disabled={saving}>{saving ? "Saving..." : "Save and Check In"}</button>
             <button className="btn ghost" type="button" onClick={onBack}>Cancel</button>
           </div>
         </form>
-      </div>
-
-      <div className="panel panel-pad workspace">
-        <p className="kicker">Preview</p>
-        <div className="preview-photo">
-          {preview?.photoSrc ? <img src={preview.photoSrc} alt="Detected face preview" /> : null}
-          {preview?.box && preview?.sourceSize && preview?.displaySize ? (
-            <FaceBoxOverlay box={preview.box} sourceSize={preview.sourceSize} displaySize={preview.displaySize} color="#ef4444" />
-          ) : null}
-        </div>
       </div>
     </section>
   );

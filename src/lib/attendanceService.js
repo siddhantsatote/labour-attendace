@@ -199,3 +199,18 @@ export async function getTodayAttendanceWithWorkers() {
 
   return data || [];
 }
+
+export async function getAttendanceHistoryWithWorkers() {
+  const supabase = getSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("attendance")
+    .select("id, worker_id, check_in_time, check_out_time, hours_worked, date, workers(name, phone)")
+    .order("check_in_time", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data || [];
+}

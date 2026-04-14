@@ -1,11 +1,40 @@
-import React, { useEffect, useState } from "react";
-import { getAllWorkers, getTodayAttendanceWithWorkers } from "../lib/attendanceService";
+import React, { useEffect, useMemo, useState } from "react";
+import MobileBottomNav from "../components/MobileBottomNav";
+import { getAttendanceHistoryWithWorkers } from "../lib/attendanceService";
 
-export default function AdminDashboardScreen({ refreshKey, onBack }) {
-  const [workers, setWorkers] = useState([]);
+function formatTime(value) {
+  if (!value) {
+    return "--:--";
+  }
+
+  return new Date(value).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
+function getRangeStart(tab) {
+  const now = new Date();
+
+  if (tab === "today") {
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+
+  if (tab === "week") {
+    const start = new Date(now);
+    start.setDate(start.getDate() - 6);
+    start.setHours(0, 0, 0, 0);
+    return start;
+  }
+
+  return null;
+}
+
+export default function AdminDashboardScreen({ refreshKey, onBack, onOpenCamera, onOpenHome }) {
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("today");
 
   useEffect(() => {
     let active = true;
@@ -14,12 +43,11 @@ export default function AdminDashboardScreen({ refreshKey, onBack }) {
       try {
         setLoading(true);
         setError("");
-        const [allWorkers, todayAttendance] = await Promise.all([getAllWorkers(), getTodayAttendanceWithWorkers()]);
+        const allAttendance = await getAttendanceHistoryWithWorkers();
         if (!active) {
           return;
         }
-        setWorkers(allWorkers);
-        setAttendance(todayAttendance);
+        setAttendance(allAttendance);
       } catch (currentError) {
         if (active) {
           setError(currentError.message || "Unable to load dashboard.");
@@ -37,46 +65,66 @@ export default function AdminDashboardScreen({ refreshKey, onBack }) {
     };
   }, [refreshKey]);
 
+  const filteredAttendance = useMemo(() => {
+    const rangeStart = getRangeStart(activeTab);
+
+    if (!rangeStart) {
+      return attendance;
+    }
+
+    return attendance.filter((record) => {
+      const checkIn = record.check_in_time || (record.date ? `${record.date}T00:00:00` : null);
+
+      if (!checkIn) {
+        return false;
+      }
+
+      return new Date(checkIn) >= rangeStart;
+    });
+  }, [activeTab, attendance]);
+
   return (
-    <section className="hero">
-      <div className="panel panel-pad workspace">
-        <p className="kicker">Dashboard</p>
-        <h2 className="section-title">Registered Labours</h2>
-        <div className="list">
-          {loading ? <div className="status">Loading workers...</div> : null}
-          {error ? <div className="status" style={{ borderColor: "rgba(239, 68, 68, 0.35)" }}>{error}</div> : null}
-          {!loading && !workers.length ? <div className="status">No workers registered yet.</div> : null}
-          {workers.map((worker) => (
-            <div key={worker.id} className="list-item">
-              <h3>{worker.name}</h3>
-              <p>{worker.phone}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="actions">
-          <button className="btn ghost" onClick={onBack}>Home</button>
-        </div>
+    <section className="mobile-screen history-screen">
+      <div className="history-topbar">
+        <button className="icon-button outline" type="button" onClick={onBack} aria-label="Go back">
+          ←
+        </button>
+        <h2 className="history-title">Attendance History</h2>
+        <button className="icon-button outline" type="button" aria-label="Open menu">
+          ⋯
+        </button>
       </div>
 
-      <div className="panel panel-pad workspace">
-        <h2 className="section-title">Today's Attendance</h2>
-        <div className="list">
-          {loading ? <div className="status">Loading attendance...</div> : null}
-          {!loading && !attendance.length ? <div className="status">No attendance records for today.</div> : null}
-          {attendance.map((record) => {
-            const workerName = record.workers?.name || "Unknown";
-            return (
-              <div key={record.id} className="list-item">
-                <h3>{workerName}</h3>
-                <p>Check-in: {record.check_in_time ? new Date(record.check_in_time).toLocaleTimeString() : "-"}</p>
-                <p>Check-out: {record.check_out_time ? new Date(record.check_out_time).toLocaleTimeString() : "-"}</p>
-                <p>Hours worked: {record.hours_worked ?? "-"}</p>
+      <div className="history-tabs" role="tablist" aria-label="Attendance filters">
+        <button className={`history-tab ${activeTab === "today" ? "active" : ""}`} type="button" onClick={() => setActiveTab("today")}>Today</button>
+        <button className={`history-tab ${activeTab === "week" ? "active" : ""}`} type="button" onClick={() => setActiveTab("week")}>This Week</button>
+        <button className={`history-tab ${activeTab === "all" ? "active" : ""}`} type="button" onClick={() => setActiveTab("all")}>All</button>
+      </div>
+
+      {error ? <div className="alert-card">{error}</div> : null}
+
+      <div className="history-list">
+        {loading ? <div className="muted-empty">Loading attendance history...</div> : null}
+        {!loading && !filteredAttendance.length ? <div className="muted-empty">No records found for this period.</div> : null}
+        {filteredAttendance.map((record) => {
+          const workerName = record.workers?.name || "Unknown labour";
+
+          return (
+            <article key={record.id} className="history-row">
+              <div className="history-icon">◧</div>
+              <div className="history-copy">
+                <strong>{workerName}</strong>
+                <span>{formatTime(record.check_in_time)} · {record.date || ""}</span>
               </div>
-            );
-          })}
-        </div>
+              <button className="history-trash" type="button" aria-label={`Delete ${workerName}`}>
+                🗑
+              </button>
+            </article>
+          );
+        })}
       </div>
+
+      <MobileBottomNav onCamera={onOpenCamera} onScan={onOpenCamera} onPerson={onOpenHome} />
     </section>
   );
 }

@@ -99,7 +99,8 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
           color: "#ef4444",
           matched: false,
           message: "Scan failed to detect a face. Continue with manual new labour registration.",
-          descriptor: null
+          descriptor: null,
+          record: null
         });
         setStatus("Scan failed. Continue by saving as new labour.");
         return;
@@ -131,7 +132,8 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
           matched: true,
           message,
           descriptor: detected.descriptor,
-          worker
+          worker,
+          record: action.record || null
         });
         setStatus(message);
         onAttendanceSaved?.();
@@ -144,7 +146,8 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
           color: "#ef4444",
           matched: false,
           message: "New face detected. Register this worker.",
-          descriptor: detected.descriptor
+          descriptor: detected.descriptor,
+          record: null
         });
         setStatus("New face detected. Register this worker.");
       }
@@ -159,7 +162,8 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
           color: "#ef4444",
           matched: false,
           message: "Scan failed. Save this labour manually with captured photo.",
-          descriptor: null
+          descriptor: null,
+          record: null
         });
       }
       setStatus(error.message || "Unable to process this scan. Save as new labour.");
@@ -189,93 +193,138 @@ export default function CameraScreen({ mode, onBack, onRegister, onAttendanceSav
     setStatus("Camera switched. Align one face and scan.");
   }
 
+  function handleResetScan() {
+    setCaptureResult(null);
+    setStatus("Center a face in the frame.");
+  }
+
   const webcamStyle = useMemo(() => ({
     width: "100%",
     height: "100%"
   }), []);
 
   return (
-    <section className="hero">
-      <div className="panel panel-pad workspace">
-        <p className="kicker">Face scan</p>
-        <h2 className="section-title">{title}</h2>
-        <p className="small">{modeHint}</p>
-        <div className="status">{loadingModels ? "Loading face models..." : status}</div>
-        <div className="tag-row">
-          <span className="tag good">Green box: matched labour</span>
-          <span className="tag bad">Red box: new labour</span>
+    <section className="camera-page">
+      <div className="camera-stage">
+        {!captureResult?.photoSrc ? (
+          <>
+            <Webcam
+              ref={webcamRef}
+              audio={false}
+              screenshotFormat="image/jpeg"
+              screenshotQuality={0.9}
+              videoConstraints={{ facingMode }}
+              className="camera-feed"
+              style={webcamStyle}
+            />
+            {liveBox ? (
+              <FaceBoxOverlay box={liveBox} sourceSize={{ width: 640, height: 480 }} displaySize={liveSize} color="#ffffff" />
+            ) : null}
+          </>
+        ) : (
+          <>
+            <img className="camera-feed" src={captureResult.photoSrc} alt="Captured face" />
+            {captureResult.box ? (
+              <FaceBoxOverlay box={captureResult.box} sourceSize={captureResult.sourceSize} displaySize={captureResult.displaySize} color={captureResult.color} />
+            ) : null}
+          </>
+        )}
+
+        <div className="camera-overlay-gradient" aria-hidden="true" />
+
+        <div className="camera-topbar">
+          <button className="icon-button dark" type="button" onClick={onBack} aria-label="Back">
+            ←
+          </button>
+
+          <div className="camera-topbar-copy">
+            <p className="section-kicker light">Face Recognition</p>
+            <h2 className="camera-title">{title}</h2>
+            <p className="camera-subtitle">{modeHint}</p>
+          </div>
+
+          <button className="icon-button dark" type="button" onClick={toggleCamera} disabled={busy} aria-label="Flip camera">
+            ↺
+          </button>
         </div>
 
-        {captureResult?.matched ? (
-          <div className="status">
-            <strong>Matched labour</strong>
-            <p className="small">{captureResult.message}</p>
-          </div>
-        ) : null}
+        <div className="scan-progress-pill">{loadingModels ? "Loading models..." : "Scanning... 50%"}</div>
 
-        {captureResult && !captureResult.matched ? (
-          <div className="actions">
-            <button className="btn success" onClick={handleRegister}>Register New Labour</button>
-          </div>
-        ) : null}
-      </div>
+        <div className="scan-reticle" aria-hidden="true">
+          <span className="scan-corner top-left" />
+          <span className="scan-corner top-right" />
+          <span className="scan-corner bottom-left" />
+          <span className="scan-corner bottom-right" />
+        </div>
 
-      <div className="panel panel-pad workspace">
-        <div className="camera-lens-shell">
-          {!captureResult?.photoSrc ? (
-            <>
-              <Webcam
-                ref={webcamRef}
-                audio={false}
-                screenshotFormat="image/jpeg"
-                screenshotQuality={0.9}
-                videoConstraints={{ facingMode }}
-                style={webcamStyle}
-              />
-              {liveBox ? (
-                <FaceBoxOverlay box={liveBox} sourceSize={{ width: 640, height: 480 }} displaySize={liveSize} color="#22c55e" />
-              ) : null}
-            </>
-          ) : (
-            <>
-              <img src={captureResult.photoSrc} alt="Captured face" />
-              {captureResult.box ? (
-                <FaceBoxOverlay box={captureResult.box} sourceSize={captureResult.sourceSize} displaySize={captureResult.displaySize} color={captureResult.color} />
-              ) : null}
-            </>
-          )}
-
-          <div className="lens-top-bar">
-            <button className="lens-icon-btn" onClick={onBack} aria-label="Back to home">←</button>
-            <div className="lens-title">Attendance Scan</div>
-            <button className="lens-icon-btn" onClick={toggleCamera} disabled={busy} aria-label="Switch camera">
+        {!captureResult ? (
+          <div className="camera-dock">
+            <button className="camera-dock-button" type="button" onClick={toggleCamera} disabled={busy} aria-label="Flip camera">
               ↺
             </button>
-          </div>
 
-          <div className="lens-reticle" aria-hidden="true">
-            <span className="corner top-left" />
-            <span className="corner top-right" />
-            <span className="corner bottom-left" />
-            <span className="corner bottom-right" />
-          </div>
-
-          <div className="lens-bottom-dock">
-            <div className="lens-status-chip">
-              {captureResult ? "Result ready" : `Mode: ${title}`}
-            </div>
-
-            <button className="lens-capture-btn" onClick={handleCapture} disabled={busy || loadingModels}>
-              <span className="lens-capture-inner" />
+            <button className="camera-capture-button" type="button" onClick={handleCapture} disabled={busy || loadingModels} aria-label="Capture face">
+              <span className="camera-capture-inner" />
             </button>
 
-            {captureResult ? (
-              <button className="lens-text-btn" onClick={() => setCaptureResult(null)}>Rescan</button>
-            ) : (
-              <span className="lens-text-placeholder" />
-            )}
+            <button className="camera-dock-button" type="button" disabled aria-label="Open gallery">
+              ◫
+            </button>
           </div>
-        </div>
+        ) : (
+          <div className="scan-sheet">
+            <div className="scan-sheet-handle" />
+            <div className="scan-result-avatar">
+              {captureResult.photoSrc ? <img src={captureResult.photoSrc} alt="Captured worker" /> : null}
+            </div>
+
+            <div className="scan-result-copy">
+              <p className="section-kicker">{captureResult.matched ? "Worker profile" : "New labour"}</p>
+              <h3>{captureResult.worker?.name || "Unknown Worker"}</h3>
+              <p className="scan-result-subtitle">{captureResult.message}</p>
+            </div>
+
+            <div className="scan-detail-grid">
+              <div className="scan-detail-card">
+                <span>Worker Name</span>
+                <strong>{captureResult.worker?.name || "Unknown"}</strong>
+              </div>
+              <div className="scan-detail-card">
+                <span>Worker ID</span>
+                <strong>{captureResult.worker?.id || "Pending"}</strong>
+              </div>
+              <div className="scan-detail-card">
+                <span>Check-in Time</span>
+                <strong>{captureResult.record?.check_in_time ? new Date(captureResult.record.check_in_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "--:--"}</strong>
+              </div>
+              <div className="scan-detail-card">
+                <span>Date</span>
+                <strong>{captureResult.record?.date || new Date().toLocaleDateString()}</strong>
+              </div>
+              <div className="scan-detail-card full-width">
+                <span>Status</span>
+                <strong className={captureResult.matched ? "status-positive" : "status-warning"}>{captureResult.matched ? "Active" : "Needs Registration"}</strong>
+              </div>
+            </div>
+
+            <div className="scan-sheet-actions">
+              {captureResult.matched ? (
+                <button className="btn primary" type="button" onClick={onBack}>
+                  Confirm Check-In
+                </button>
+              ) : (
+                <button className="btn primary" type="button" onClick={handleRegister}>
+                  Register Labour
+                </button>
+              )}
+              <button className="btn ghost" type="button" onClick={handleResetScan}>
+                Re-Scan
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="camera-status-chip">{status}</div>
       </div>
     </section>
   );
